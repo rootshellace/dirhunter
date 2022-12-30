@@ -5,34 +5,24 @@ import re
 import sys
 import requests
 import http
+import cfg
 import colors
 
 
 def get_arguments():
 
-	parser_description = '''
-	dirhunter by rootshellace
-
-	This is a tool used to brute force URLs for subpages.
-
-	You need to pass 2 arguments, the URL to be scanned and 
-	the file which contains the subpages to check.
-
-	In case you need to access the page using a different port
-	from the standard one, just append :[PORT] at the end of 
-	the URL, replacing [PORT] with the number of the needed port.
-	'''
-
-	parser = argparse.ArgumentParser(description=parser_description, 
+	parser = argparse.ArgumentParser(description=cfg.parser_description, 
 									formatter_class=argparse.RawDescriptionHelpFormatter)
-	parser.add_argument('-u', '--url', metavar="URL", type=str, help="URL to scan", required=True)
-	parser.add_argument('-w', '--wordlist', metavar="WORDLIST", type=argparse.FileType('r', encoding='UTF-8'), 
-						help="File containing list of subpaths to check", required=True)
+	parser.add_argument(cfg.url_short_opt, cfg.url_long_opt, metavar=cfg.url_metavar, type=str, 
+						help=cfg.url_help, required=True)
+	parser.add_argument(cfg.wordlist_short_opt, cfg.wordlist_long_opt, metavar=cfg.wordlist_metavar, 
+						type=argparse.FileType(cfg.file_read_mode, encoding=cfg.encd_utf8), 
+						help=cfg.wordlist_help, required=True)
 	args = parser.parse_args()
-	url_regex = "^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}(:[0-9]{1,5})?(\/[a-zA-Z0-9@:%.\#~=+-_]*)*$"
 
-	if not re.match(url_regex, args.url):
-		print("Invalid URL!")
+	if not re.match(cfg.url_regex, args.url):
+		
+		print(cfg.invalid_url_error_msg)
 		parser.print_help()
 		sys.exit()
 
@@ -42,15 +32,18 @@ def get_arguments():
 def create_urls_to_scan(main_url, subpages_list):
 
 	urls_to_scan = []
-
-	subpages_content = open(subpages_list, 'r')
+	subpages_content = open(subpages_list, cfg.file_read_mode)
 
 	for subpage in subpages_content:
 		
-		if main_url[-1] == '/':
+		if main_url[-1] == cfg.url_join_char:
+			
 			url = main_url + subpage.strip()
+		
 		else:
-			url = main_url + '/' + subpage.strip()
+		
+			url = main_url + cfg.url_join_char + subpage.strip()
+		
 		urls_to_scan.append(url)
 
 	subpages_content.close()
@@ -63,21 +56,30 @@ def scan_urls(urls_to_scan):
 	for url in urls_to_scan:
 		
 		url_request = requests.get(url)
-		msg = "-> " + http.HTTPStatus(url_request.status_code).phrase + " (Status : " + str(url_request.status_code) + ")"
+		msg = cfg.url_output_msg_template.replace(cfg.url_status_desc_var, 
+												http.HTTPStatus(url_request.status_code).phrase)
+		msg = msg.replace(cfg.url_status_code_var, str(url_request.status_code))
 
-		if url_request.status_code == 200:
-			print("[•]", url, colors.green.format(msg))
-		else:
-			print("[•]", url, colors.red.format(msg))
+		if url_request.status_code == cfg.http_code_ok:
+
+			print(cfg.bullet_char, url, colors.green.format(msg))
+
+		elif url_request.status_code != cfg.http_code_not_found:
+			
+			print(cfg.bullet_char, url, colors.yellow.format(msg))
 
 
 def show_header(main_url, subpages_list):
 
-	print(colors.yellow.format("dirhunter - scan URLs for subpages"))
-	print(colors.purple.format("=" * 70))
-	print(colors.blue.format("[*] URL".ljust(15)), ":", str(main_url))
-	print(colors.blue.format("[*] Wordlist".ljust(15)), ":", str(subpages_list))
-	print(colors.purple.format("=" * 70))
+	print(colors.blue.format(cfg.output_header))
+	print(colors.yellow.format(cfg.output_line))
+	print(colors.red.format(cfg.output_url.ljust(cfg.output_ljust)), cfg.output_var_sep, 
+			str(main_url))
+	print(colors.red.format(cfg.output_wordlist.ljust(cfg.output_ljust)), cfg.output_var_sep, 
+			str(subpages_list))
+	print(colors.red.format(cfg.output_omit_sts_cd.ljust(cfg.output_ljust)), cfg.output_var_sep, 
+			str(cfg.http_code_not_found))
+	print(colors.yellow.format(cfg.output_line))
 
 
 if __name__ == "__main__":
