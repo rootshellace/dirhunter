@@ -71,7 +71,8 @@ def scan_urls(urls_to_scan):
 
 def show_header(main_url, subpages_list):
 
-	print(colors.blue.format(cfg.output_header))
+	print(colors.yellow.format(cfg.output_line))
+	print(colors.blue.format(cfg.output_header.center(cfg.output_line_length)))
 	print(colors.yellow.format(cfg.output_line))
 	print(colors.red.format(cfg.output_url.ljust(cfg.output_ljust)), cfg.output_var_sep, 
 			str(main_url))
@@ -80,11 +81,32 @@ def show_header(main_url, subpages_list):
 	print(colors.red.format(cfg.output_omit_sts_cd.ljust(cfg.output_ljust)), cfg.output_var_sep, 
 			str(cfg.http_code_not_found))
 	print(colors.yellow.format(cfg.output_line))
+	print(colors.purple.format(cfg.output_start_scan_msg.center(cfg.output_line_length)))
+	print(colors.yellow.format(cfg.output_line))
+
+
+def show_footer():
+
+	print(colors.yellow.format(cfg.output_line))
+	print(colors.purple.format(cfg.output_end_scan_msg.center(cfg.output_line_length)))
+	print(colors.yellow.format(cfg.output_line))
+
+def close_program(exc):
+
+	print(cfg.output_error_msg, str(exc))
+	print(cfg.output_exit_msg)
+	sys.exit()
 
 
 if __name__ == "__main__":
 
-	main_url, subpages_list = get_arguments()
-	urls_to_scan = create_urls_to_scan(main_url, subpages_list)
-	show_header(main_url, subpages_list)
-	scan_urls(urls_to_scan)
+	try:
+		main_url, subpages_list = get_arguments()
+		urls_to_scan = create_urls_to_scan(main_url, subpages_list)
+		show_header(main_url, subpages_list)
+		scan_urls(urls_to_scan)
+		show_footer()
+	except Exception as exc:
+		close_program(exc)
+
+

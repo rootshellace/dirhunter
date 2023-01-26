@@ -47,6 +47,10 @@ http_code_not_found = 404
 
 bullet_char = "[•]"
 output_header = "dirhunter by rootshellace - scan URLs for subpages"
+output_start_scan_msg = "Started scanning..."
+output_end_scan_msg = "Scan complete!"
+output_error_msg = "Error encountered:"
+output_exit_msg = "The script will end!"
 output_line_char = "="
 output_line_length = 70
 output_line = output_line_char * output_line_length
